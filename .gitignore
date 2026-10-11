@@ -1,0 +1,24 @@
+# ---- Bhachakra backend (public repo) ----
+# Only the backend .py files go public. Everything below stays on your PC.
+
+# Secrets - NEVER commit
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# The app (private - has its own separate repo)
+frontend/
+
+# Python clutter
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
