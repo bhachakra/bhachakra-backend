@@ -19,6 +19,7 @@ from supabase import Client
 from vargas import compute_varga, VARGA_NAMES
 from strength import compute_all as compute_strength, VIMSOPAKA_SCHEMES
 from auth import get_current_user_id, get_supabase_client
+from kp import get_kp, KP_AYANAMSAS
 
 app = FastAPI(title="Bhachakra API")
 
@@ -177,6 +178,29 @@ def panchanga(
         "sunrise": p.sunrise.isoformat().replace("+00:00", "Z") if p.sunrise else None,
         "sunset": p.sunset.isoformat().replace("+00:00", "Z") if p.sunset else None,
     }
+
+
+@app.get("/kp")
+def kp(
+    date: str = Query(..., description="Chart date, ISO, e.g. 1988-02-12"),
+    time: str = Query("12:00:00", description="Chart time HH:MM:SS, UTC"),
+    lat: float = Query(..., ge=-90, le=90),
+    lon: float = Query(..., ge=-180, le=180),
+    ayanamsa: str = Query("kp", description="kp (Krishnamurti) or kp_new"),
+    nodes: str = Query("mean", description="mean or true Rahu/Ketu"),
+):
+    """
+    Krishnamurti Paddhati for one moment and place: Placidus cusps and
+    planets with their sign/star/sub/sub-sub lords, the house each planet
+    occupies by cusp, significators (by planet and by house) and the Ruling
+    Planets of the moment. See kp.py.
+    """
+    if ayanamsa not in KP_AYANAMSAS:
+        raise HTTPException(status_code=400, detail=f"ayanamsa must be one of {list(KP_AYANAMSAS)}")
+    if nodes not in ("mean", "true"):
+        raise HTTPException(status_code=400, detail="nodes must be 'mean' or 'true'")
+    dt = datetime.fromisoformat(f"{date}T{time}").replace(tzinfo=timezone.utc)
+    return get_kp(to_julian_day(dt), lat, lon, ayanamsa=ayanamsa, nodes=nodes)
 
 
 @app.get("/dasha")
